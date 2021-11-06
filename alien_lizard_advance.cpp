@@ -6,7 +6,11 @@
 
 static float z;
 static float y_inc;
-static GLUquadricObj *qobj; // Create a pointer to a quadric object.
+static float move_lizard_x;
+static float move_lizard_y;
+static float final_lizard_x;
+static int channel_count; 
+
 static float matShine[] = { 50.0 };
 
 char canvas_Name[] = "Alien Lizard Advance"; // Name at the top of canvas
@@ -15,19 +19,16 @@ char canvas_Name[] = "Alien Lizard Advance"; // Name at the top of canvas
 #define canvas_Width 600
 #define canvas_Height 600
 
+void timer_func(int val);
+
 void init(void) {
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	z = -150.0;
 	y_inc = 0;
-	// Create the new quadric object.
-
-	qobj = gluNewQuadric();
-
-
-
-	// Specify that quadrics are drawn in wireframe.
-
-	gluQuadricDrawStyle(qobj, GLU_LINE);
+	move_lizard_y = 225.0; //300-75
+	final_lizard_x = 0;
+	channel_count = 0;
+	move_lizard_x = -288.0;
 
 }
 
@@ -188,6 +189,12 @@ void draw_lizard(float x, float y, float z) {
 
 
 void draw_laser(float x, float y, float z) {
+	GLUquadricObj *qobj; // Create a pointer to a quadric object.
+	// Create the new quadric object.
+	qobj = gluNewQuadric();
+
+	// Specify that quadrics are drawn in wireframe.
+	gluQuadricDrawStyle(qobj, GLU_LINE);
 	// Material properties of the laser.
 	float matAmb[] = { 1.0, 1.0, 1.0, 1.0 };
 	float matDif[] = { 1.0, 1.0, 1.0, 1.0 };
@@ -206,11 +213,38 @@ void display_func(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glLoadIdentity();
 	draw_human(-250.0, -270.0, z);
-	draw_lizard(-250.0, 270.0, z);
+	draw_lizard(move_lizard_x, move_lizard_y, z);
+	//glutTimerFunc(1000, timer_func, 1);
 	draw_laser(0, -290, z);
 	glutSwapBuffers();
 	glFlush();
 
+}
+
+void move_lizard(void) {
+	if (channel_count % 2 == 0) {
+		move_lizard_x += 20;
+	}
+	else {
+		move_lizard_x -= 20;
+	}
+}
+
+void timer_func(int val) {
+	switch (val) {
+	case 1: 
+		if (move_lizard_x > 228 or move_lizard_x < -288.0) { // 300-99
+			move_lizard_y -= 75;
+			channel_count += 1;
+		}
+		glutPostRedisplay();
+		move_lizard();	
+		if (move_lizard_y != -279) {
+			glutTimerFunc(1000, timer_func, 1);
+		}
+		break;
+		
+	}
 }
 
 int main(int argc, char ** argv) {
@@ -220,6 +254,7 @@ int main(int argc, char ** argv) {
 	glutDisplayFunc(display_func);
 	init();
 	setup_light_source();
+	glutTimerFunc(1000, timer_func, 1);
 	glutMainLoop();
 	return 0;
 }
