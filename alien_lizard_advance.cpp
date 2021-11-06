@@ -19,7 +19,9 @@ static float y;
 
 static float matShine[] = { 50.0 };
 
+static int score;
 char canvas_Name[] = "Alien Lizard Advance"; // Name at the top of canvas
+
 
 // Sets width and height of canvas to 600 by 60s0.
 #define canvas_Width 600
@@ -42,6 +44,7 @@ void init(void) {
 	isAnimate = 1;
 	fire_signal = 0;
 	y = 0;
+	score = 0;
 
 }
 
@@ -194,10 +197,12 @@ void draw_all_limbs(float x, float y, float z) {
 }
 
 void draw_lizard(float x, float y, float z) {
+	glPushMatrix();
 	draw_lizard_body(x, y, z);
 	draw_lizard_head(x, y, z);
 	draw_lizard_tail(x + 75, y, z);
 	draw_all_limbs(x, y - 15, z);
+	glPopMatrix();
 }
 
 
@@ -232,8 +237,9 @@ void draw_laser_beam() {
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, matShine);
 	if (x_pos_laser < move_lizard_x + 99 and x_pos_laser > move_lizard_x) {
+		glutKeyboardFunc(NULL);
 		y = move_lizard_y - 15;
-		glutTimerFunc(1000, timer_func, 3);
+		glutTimerFunc(1000, timer_func, 3);		
 	}
 	else {
 		y = 300;
@@ -245,16 +251,46 @@ void draw_laser_beam() {
 		glVertex3f(x_pos_laser+2, y, z);
 	glEnd();
 }
+
+void writeBitmapString(void *font, char *string) {
+	/*
+	This function writes a bitmap text, one character at a time.
+	Parameters:
+	----------
+		font: void pointer
+			The font to use to write a text.
+		string: char pointer
+			The text to write.
+	*/
+	char *c;
+	for (c = string; *c != '\0'; c++) {
+		glutBitmapCharacter(font, *c);
+	}
+}
+
+void display_score(float x, float y, float z) {
+	glPushMatrix();
+	glRasterPos3f(x, y, z);
+	char scoreText[20] = "SCORE: ";
+	char scoreNum[6];
+	sprintf_s(scoreNum, 6, "%d", score);
+	strcat_s(scoreText, 20, scoreNum);
+	writeBitmapString(GLUT_BITMAP_HELVETICA_12, scoreText);
+	glPopMatrix();
+}
+
 void display_func(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glLoadIdentity();
-	draw_human(x_pos_human, -270.0, z);
+	draw_human(x_pos_human, -270.0, z);	
 	draw_lizard(move_lizard_x, move_lizard_y, z);
 	draw_laser(x_pos_laser, y_pos_laser, z);
 	if (fire_signal) {
 		draw_laser_beam();
 		glutTimerFunc(50, timer_func, 2);
 	}
+	display_score(-20, 280, z);
+	
 	glutSwapBuffers();
 	glFlush();
 
@@ -271,7 +307,6 @@ void move_lizard(void) {
 		move_lizard_y = -279;
 	}
 }
-
 
 void timer_func(int val) {
 	switch (val) {
@@ -294,10 +329,13 @@ void timer_func(int val) {
 		glutPostRedisplay();
 		break;
 	case 3:
+		//glutKeyboardFunc(NULL);
 		move_lizard_x = -288.0;
 		move_lizard_y = 225.0;
 		channel_count = 0;
+		score += 50;
 		glutPostRedisplay();
+		glutKeyboardFunc(keyboard_func);
 		break;
 	}
 }
