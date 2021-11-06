@@ -10,6 +10,8 @@ static float move_lizard_x;
 static float move_lizard_y;
 static float final_lizard_x;
 static int channel_count; 
+static float x_pos_human;
+static int isAnimate;
 
 static float matShine[] = { 50.0 };
 
@@ -29,6 +31,8 @@ void init(void) {
 	final_lizard_x = 0;
 	channel_count = 0;
 	move_lizard_x = -288.0;
+	x_pos_human = -250.0;
+	isAnimate = 1;
 
 }
 
@@ -212,9 +216,8 @@ void draw_laser(float x, float y, float z) {
 void display_func(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glLoadIdentity();
-	draw_human(-250.0, -270.0, z);
+	draw_human(x_pos_human, -270.0, z);
 	draw_lizard(move_lizard_x, move_lizard_y, z);
-	//glutTimerFunc(1000, timer_func, 1);
 	draw_laser(0, -290, z);
 	glutSwapBuffers();
 	glFlush();
@@ -223,12 +226,16 @@ void display_func(void) {
 
 void move_lizard(void) {
 	if (channel_count % 2 == 0) {
-		move_lizard_x += 20;
+		move_lizard_x += 200;
 	}
 	else {
-		move_lizard_x -= 20;
+		move_lizard_x -= 200;
+	}
+	if (move_lizard_y < -279) {
+		move_lizard_y = -279;
 	}
 }
+
 
 void timer_func(int val) {
 	switch (val) {
@@ -238,11 +245,15 @@ void timer_func(int val) {
 			channel_count += 1;
 		}
 		glutPostRedisplay();
-		move_lizard();	
-		if (move_lizard_y != -279) {
+		move_lizard();
+		if (move_lizard_x <= x_pos_human && move_lizard_y <= -279) {
+			isAnimate = 0;
+		}
+		if (isAnimate) {
 			glutTimerFunc(1000, timer_func, 1);
 		}
 		break;
+	
 		
 	}
 }
