@@ -11,7 +11,11 @@ static float move_lizard_y;
 static float final_lizard_x;
 static int channel_count; 
 static float x_pos_human;
+static float x_pos_laser;
+static float y_pos_laser;
 static int isAnimate;
+static int fire_signal;
+static float y;
 
 static float matShine[] = { 50.0 };
 
@@ -22,6 +26,7 @@ char canvas_Name[] = "Alien Lizard Advance"; // Name at the top of canvas
 #define canvas_Height 600
 
 void timer_func(int val);
+void keyboard_func(unsigned char key, int x, int y);
 
 void init(void) {
 	glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -32,7 +37,11 @@ void init(void) {
 	channel_count = 0;
 	move_lizard_x = -288.0;
 	x_pos_human = -250.0;
+	x_pos_laser = 0;
+	y_pos_laser = -290;
 	isAnimate = 1;
+	fire_signal = 0;
+	y = 0;
 
 }
 
@@ -213,12 +222,38 @@ void draw_laser(float x, float y, float z) {
 	gluCylinder(qobj, 2.5, 2.5, 10, 20, 20);
 	glPopMatrix();
 }
+
+void draw_laser_beam() {
+	float matAmb[] = { 1.0, 1.0, 0, 1.0 };
+	float matDif[] = { 1.0, 1.0, 0, 1.0 };
+	float matSpec[] = { 1.0, 1.0, 1.0, 1.0 };
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, matAmb);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, matDif);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, matShine);
+	if (x_pos_laser < move_lizard_x + 99 and x_pos_laser > move_lizard_x) {
+		y = move_lizard_y-15;
+	}
+	else {
+		y = 300;
+	}
+	glBegin(GL_LINES);
+		glVertex3f(x_pos_laser-2, y_pos_laser, z);	
+		glVertex3f(x_pos_laser-2, y, z);
+		glVertex3f(x_pos_laser+2, y_pos_laser, z);
+		glVertex3f(x_pos_laser+2, y, z);
+	glEnd();
+}
 void display_func(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glLoadIdentity();
 	draw_human(x_pos_human, -270.0, z);
 	draw_lizard(move_lizard_x, move_lizard_y, z);
-	draw_laser(0, -290, z);
+	draw_laser(x_pos_laser, y_pos_laser, z);
+	if (fire_signal) {
+		draw_laser_beam();
+		glutTimerFunc(50, timer_func, 2);
+	}
 	glutSwapBuffers();
 	glFlush();
 
@@ -226,10 +261,10 @@ void display_func(void) {
 
 void move_lizard(void) {
 	if (channel_count % 2 == 0) {
-		move_lizard_x += 200;
+		move_lizard_x += 20;
 	}
 	else {
-		move_lizard_x -= 200;
+		move_lizard_x -= 20;
 	}
 	if (move_lizard_y < -279) {
 		move_lizard_y = -279;
@@ -253,9 +288,36 @@ void timer_func(int val) {
 			glutTimerFunc(1000, timer_func, 1);
 		}
 		break;
-	
+	case 2:
+		fire_signal = 0;
+		glutPostRedisplay();
+		break;
 		
 	}
+}
+
+void keyboard_func(unsigned char key, int x, int y) {
+	switch (key)
+	{
+	case 'J': case 'j':
+		glutKeyboardFunc(NULL);
+		x_pos_laser -= 5;
+		glutPostRedisplay();
+		glutKeyboardFunc(keyboard_func);
+		break;
+	case 'K': case'k':
+		glutKeyboardFunc(NULL);
+		x_pos_laser += 5;
+		glutPostRedisplay();
+		glutKeyboardFunc(keyboard_func);
+		break;
+	case ' ':
+		glutKeyboardFunc(NULL);
+		fire_signal = 1;
+		glutPostRedisplay();
+		glutKeyboardFunc(keyboard_func);
+		break;
+}
 }
 
 int main(int argc, char ** argv) {
@@ -266,6 +328,7 @@ int main(int argc, char ** argv) {
 	init();
 	setup_light_source();
 	glutTimerFunc(1000, timer_func, 1);
+	glutKeyboardFunc(keyboard_func);
 	glutMainLoop();
 	return 0;
 }
