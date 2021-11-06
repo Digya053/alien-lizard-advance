@@ -332,6 +332,9 @@ void timer_func(int val) {
 		//glutKeyboardFunc(NULL);
 		move_lizard_x = -288.0;
 		move_lizard_y = 225.0;
+		if (channel_count == 0 or channel_count == 1) {
+			score += 50;
+		}
 		channel_count = 0;
 		score += 50;
 		glutPostRedisplay();
