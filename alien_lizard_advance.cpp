@@ -232,7 +232,8 @@ void draw_laser_beam() {
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, matShine);
 	if (x_pos_laser < move_lizard_x + 99 and x_pos_laser > move_lizard_x) {
-		y = move_lizard_y-15;
+		y = move_lizard_y - 15;
+		glutTimerFunc(1000, timer_func, 3);
 	}
 	else {
 		y = 300;
@@ -292,7 +293,12 @@ void timer_func(int val) {
 		fire_signal = 0;
 		glutPostRedisplay();
 		break;
-		
+	case 3:
+		move_lizard_x = -288.0;
+		move_lizard_y = 225.0;
+		channel_count = 0;
+		glutPostRedisplay();
+		break;
 	}
 }
 
