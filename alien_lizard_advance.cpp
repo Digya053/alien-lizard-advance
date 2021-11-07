@@ -184,8 +184,8 @@ void draw_lizard_head(float x, float y, float z) {
 }
 
 void draw_lizard_tail(float x, float y, float z) {
-	float matAmb[] = { 1.0, 0.0, 0.0, 1.0 };
-	float matDif[] = { 1.0, 0.0, 0.0, 1.0 };
+	float matAmb[] = { 1.0, 1.0, 0.0, 1.0 };
+	float matDif[] = { 1.0, 1.0, 0.0, 1.0 };
 	float matSpec[] = { 1.0, 1.0, 1.0, 1.0 };
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, matAmb);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, matDif);
