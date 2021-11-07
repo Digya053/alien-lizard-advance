@@ -23,6 +23,9 @@ static int hit_step;
 static float random_x;
 static float random_y;
 
+float x_tip_head;
+float x_tip_tail;
+
 static bool first_food = true;
 static bool second_food = true;
 
@@ -172,6 +175,7 @@ void draw_lizard_head(float x, float y, float z) {
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, matShine);
 	float y_tip = y_inc / 2;
+	x_tip_head = x - 12;
 	glBegin(GL_TRIANGLES);
 	glVertex3f(x, y, z);
 	glVertex3f(x, y + y_inc, z);
@@ -180,7 +184,15 @@ void draw_lizard_head(float x, float y, float z) {
 }
 
 void draw_lizard_tail(float x, float y, float z) {
+	float matAmb[] = { 1.0, 0.0, 0.0, 1.0 };
+	float matDif[] = { 1.0, 0.0, 0.0, 1.0 };
+	float matSpec[] = { 1.0, 1.0, 1.0, 1.0 };
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, matAmb);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, matDif);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, matShine);
 	float y_tip = y_inc / 2;
+	x_tip_tail = x + 12;
 	glBegin(GL_TRIANGLES);
 	glVertex3f(x, y, z);
 	glVertex3f(x, y  + y_inc , z);
@@ -256,10 +268,10 @@ void draw_laser_beam() {
 	if (x_pos_laser <= move_lizard_x + lizard_size + 12 and x_pos_laser >= move_lizard_x-12) {
 		glutKeyboardFunc(NULL);
 		y = move_lizard_y - y_inc;
-		if (hit_step < 1) {
-			glutTimerFunc(0, timer_func, 3);
+		if (hit_step == 1) {
+			glutTimerFunc(1000, timer_func, 3);
 		}
-		else {
+		else if (hit_step >= 2){
 			glutTimerFunc(1000, timer_func, 4);
 		}
 	}
@@ -283,7 +295,7 @@ void calculate_random_coordinates() {
 	int max = 10;
 	srand(time(NULL));
 	random_x = (rand() % max) * 25;
-	const int array_num[4] = { 225, 150, 75};
+	const int array_num[4] = {75, 150};
 	int rand_index = rand() % 4;
 	random_y = array_num[rand_index];
 }
@@ -300,13 +312,13 @@ void display_food(float x, float y, float z) {
 	glutSolidTorus(8, 23, 30, 30);
 	glPopMatrix();
 	if (channel_count % 2 == 0) {
-		if (move_lizard_y == random_y and move_lizard_x + ((y_inc * 5) + 12) >= random_x) {
+		if (move_lizard_y == random_y and (move_lizard_x + ((y_inc * 5) + 12) >= random_x || x_tip_tail >= random_x)) {
 			if (first_food) {
 				increase_lizard_size();
 			}
 			first_food = false;
 		}
-		if (move_lizard_y == -random_y and move_lizard_x + ((y_inc * 5) + 12) >= -random_x) {
+		if (move_lizard_y == -random_y and (move_lizard_x + ((y_inc * 5) + 12) >= -random_x || x_tip_tail >= -random_x)) {
 			if (second_food) {
 				increase_lizard_size();
 			}
@@ -315,13 +327,13 @@ void display_food(float x, float y, float z) {
 
 	}
 	else {
-		if (move_lizard_y == random_y and move_lizard_x + ((y_inc * 5) + 12) <= random_x) {
+		if (move_lizard_y == random_y and (move_lizard_x + ((y_inc * 5) + 12) <= random_x || x_tip_head <= random_x)) {
 			if (first_food) {
 				increase_lizard_size();
 			}
 			first_food = false;
 		}
-		if (move_lizard_y == -random_y and move_lizard_x + ((y_inc * 5) + 12) <= -random_x) {
+		if (move_lizard_y == -random_y and (move_lizard_x + ((y_inc * 5) + 12) <= -random_x || x_tip_head <= -random_x)) {
 			if (second_food) {
 				increase_lizard_size();
 			}
@@ -367,7 +379,7 @@ void display_func(void) {
 	draw_laser(x_pos_laser, y_pos_laser, z);
 	if (fire_signal) {
 		draw_laser_beam();
-		glutTimerFunc(50, timer_func, 2);
+		glutTimerFunc(80, timer_func, 2);
 	}
 	display_score(-20, 280, z);
 	if (first_food) {
@@ -396,8 +408,16 @@ void move_lizard(void) {
 
 void timer_func(int val) {
 	switch (val) {
-	case 1: 
-		if (move_lizard_x > 228 or move_lizard_x < -288.0) { // 300-99
+	case 1:
+
+		if ((channel_count % 2 == 0) and x_tip_tail >= 279) {
+			move_lizard_x = 300 - (y_inc * 5) - ((12 * y_inc) / 2)-20;
+			move_lizard_y -= 75;
+			channel_count += 1;
+			y_inc += 25;
+		}
+		if ((channel_count % 2 != 0) and (x_tip_head <= -279)) {
+			move_lizard_x = -300;
 			move_lizard_y -= 75;
 			channel_count += 1;
 			y_inc += 25;
@@ -406,6 +426,7 @@ void timer_func(int val) {
 		move_lizard();
 		if (move_lizard_x <= x_pos_human && move_lizard_y <= -279) {
 			isAnimate = 0;
+			glutTimerFunc(2000, timer_func, 5);
 		}
 		if (isAnimate) {
 			glutTimerFunc(1000, timer_func, 1);
@@ -416,12 +437,14 @@ void timer_func(int val) {
 		glutPostRedisplay();
 		break;
 	case 3:
+		//glutKeyboardFunc(NULL);
 		y_inc = y_inc / 2;
-		hit_step += 1;
+		//hit_step += 1;
 		glutPostRedisplay();
 		glutKeyboardFunc(keyboard_func);
 		break;
 	case 4:
+		//glutKeyboardFunc(NULL);
 		move_lizard_x = -288.0;
 		move_lizard_y = 225.0;
 		first_food = true;
@@ -436,6 +459,9 @@ void timer_func(int val) {
 		score += 50;
 		glutPostRedisplay();
 		glutKeyboardFunc(keyboard_func);
+		break;
+	case 5:
+		exit(0);
 		break;
 	}
 }
@@ -458,6 +484,7 @@ void keyboard_func(unsigned char key, int x, int y) {
 	case ' ':
 		glutKeyboardFunc(NULL);
 		fire_signal = 1;
+		hit_step += 1;
 		glutPostRedisplay();
 		glutKeyboardFunc(keyboard_func);
 		break;
