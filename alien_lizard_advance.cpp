@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <math.h> 
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 #include "OpenGL445Setup.h"
@@ -133,9 +134,9 @@ void draw_human(float x, float y, float z) {
 
 void draw_body_odd_square(float x, float y, float z) {
 	glBegin(GL_TRIANGLE_STRIP);
-		glVertex3f(x + y_inc, y, z);
+		glVertex3f(x + 15, y, z);
 		glVertex3f(x , y, z);
-		glVertex3f(x + y_inc, y + y_inc, z);
+		glVertex3f(x + 15, y + y_inc, z);
 		glVertex3f(x, y + y_inc, z);
 	glEnd();
 }
@@ -144,8 +145,8 @@ void draw_body_even_square(float x, float y, float z) {
 	glBegin(GL_TRIANGLE_STRIP);
 		glVertex3f(x, y, z);
 		glVertex3f(x, y + y_inc, z);
-		glVertex3f(x + y_inc, y, z);
-		glVertex3f(x + y_inc, y + y_inc, z);
+		glVertex3f(x+15, y, z);
+		glVertex3f(x + 15, y + y_inc, z);
 	glEnd();
 }
 
@@ -159,10 +160,10 @@ void draw_lizard_body(float x, float y, float z) {
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, matShine);
 	draw_body_odd_square(x, y, z);
-	draw_body_even_square(x + y_inc, y, z);
-	draw_body_odd_square(x + 2 * y_inc, y, z);
-	draw_body_even_square(x + 3 * y_inc, y, z);
-	draw_body_odd_square(x + 4 * y_inc, y, z);
+	draw_body_even_square(x + 15, y, z);
+	draw_body_odd_square(x + 2 * 15, y, z);
+	draw_body_even_square(x + 3 * 15, y, z);
+	draw_body_odd_square(x + 4 * 15, y, z);
 }
 
 void draw_lizard_head(float x, float y, float z) {
@@ -218,8 +219,8 @@ void draw_all_limbs(float x, float y, float z) {
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, matDif);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, matShine);
-	draw_lizard_limbs(x + y_inc/2, y, z);
-	draw_lizard_limbs(x + (5*y_inc) - (y_inc/2), y, z);
+	draw_lizard_limbs(x + 15/2, y, z);
+	draw_lizard_limbs(x + (5*15) - (15/2), y, z);
 	
 }
 
@@ -227,7 +228,7 @@ void draw_lizard(float x, float y, float z) {
 	glPushMatrix();
 	draw_lizard_body(x, y, z);
 	draw_lizard_head(x, y, z);
-	float x_tail = y_inc * 5;
+	float x_tail = 15 * 5;
 	draw_lizard_tail(x + x_tail, y, z);
 	draw_all_limbs(x, y, z);
 	glPopMatrix();
@@ -267,7 +268,7 @@ void draw_laser_beam() {
 	float lizard_size = (y_inc * 5) + 12;
 	if (x_pos_laser <= move_lizard_x + lizard_size + 12 and x_pos_laser >= move_lizard_x-12) {
 		glutKeyboardFunc(NULL);
-		y = move_lizard_y - y_inc;
+		y = move_lizard_y - 15;
 		if (hit_step == 1) {
 			glutTimerFunc(1000, timer_func, 3);
 		}
@@ -295,7 +296,7 @@ void calculate_random_coordinates() {
 	int max = 10;
 	srand(time(NULL));
 	random_x = (rand() % max) * 25;
-	const int array_num[4] = {75, 150};
+	const int array_num[4] = {0, 75, 150, 225};
 	int rand_index = rand() % 4;
 	random_y = array_num[rand_index];
 }
@@ -410,14 +411,15 @@ void timer_func(int val) {
 	switch (val) {
 	case 1:
 
-		if ((channel_count % 2 == 0) and x_tip_tail >= 279) {
-			move_lizard_x = 300 - (y_inc * 5) - ((12 * y_inc) / 2)-20;
+		if ((channel_count % 2 == 0) and x_tip_tail >= 288) {
+			//move_lizard_x = 300 - (15 * 5) - ((12 * 15) / 2)-20;
+			move_lizard_x = 300 - (15 * 5)+8;
 			move_lizard_y -= 75;
 			channel_count += 1;
 			y_inc += 25;
 		}
-		if ((channel_count % 2 != 0) and (x_tip_head <= -279)) {
-			move_lizard_x = -300;
+		if ((channel_count % 2 != 0) and (x_tip_head <= -288)) {
+			move_lizard_x = -300-8;
 			move_lizard_y -= 75;
 			channel_count += 1;
 			y_inc += 25;
