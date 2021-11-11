@@ -1,3 +1,29 @@
+/*CS 445/545 Prog 4 for Digya Acharya*/
+/***********************************************************************************************
+alien_lizard_advance.cpp
+EXTRA_CREDIT: All four extra credit features have been implemented, i.e, placing two food pieces randomly
+in the channel, determining their number and position at random for each spawned lizard (uses globals random_x
+and random_y for positioning food at random places), growing lizard by 10 units in length each time it ingests a
+food piece (globals food_x, food_y are used for making foods disapear after lizard reaches it). The lizard 
+grows 25 units in length on entering a new channel. Blaster needs two hit to destroy the lizard (uses global 
+hit_step for determining the number of times lizard has been hit). Score increases by an extra 50 if the lizard 
+is in the top channel or the next-to-top channel.
+
+Software Architecture Statement: This program utilizes three callback functions for achieving animation: 
+display_func(), the display callback handler,  timer_func(), the timer callback handler and keyboard_func(), 
+the glut keyboard callback handler. The display function draws all the objects and text in the scene, and
+conditionally draws laser beam, reposition the laser (using globals x_pos_laser and y_pos_laser) in response 
+to the keyboard events. The timer event is added as soon as the first frame is displayed, and helps in 
+achieving motion in lizard (uses globals move_lizard_x and move_lizard_y for lizard motion).
+
+Other major global variables: lizard_size helps in changing the lizard size on ingesting food and entering 
+new channel, x_pos_human is used to determine the end of game, channel_count to determine if it's a clockwise
+channel or not, isAnimate and fire_signal are the flags for animation and if laser beam is fired respectively, 
+y_laser_hit helps in drawing laser beam only upto the position of lizard if it is hit by the laser, and upto
+the end of the screen otherwise, x_tip_head and x_tip_tail is used for determining end of channel and score
+is used for keeping track of score.
+************************************************************************************************/
+
 #include "pch.h"
 #include <iostream>
 #include <cstdlib>
@@ -7,55 +33,61 @@
 #include <GL/freeglut.h>
 #include "OpenGL445Setup.h"
 
-static float z;
-static float lizard_size;
+static float z;				//position all objects in z = -150 plane
+static float lizard_size;	//Used for resizing lizard
 
-static float move_lizard_x;
-static float move_lizard_y;
+static float move_lizard_x;	//Keeps track of lizard's current x-position
+static float move_lizard_y; //Keeps track of lizard's current y-position
 
-static float x_pos_human;
-static float x_pos_laser;
-static float y_pos_laser;
+static float x_pos_human;   //Keeps track of human's x-position
+static float x_pos_laser;	//Keeps track of current x-position of laser
+static float y_pos_laser;   //Keeps track of current y-position of laser
 
-static int channel_count; 
+static int channel_count;	//Keeps track of the channel number
 
-static int isAnimate;
-static int fire_signal;
+static int isAnimate;		//For animating and pausing movement
+static int fire_signal;		//Determine if the laser beam has been fired
+static int end_game;
 
-static int hit_step;
-static float y_laser_hit;
+static int hit_step;		//Count the number of times lizard has been hit
+static float y_laser_hit;	//The y-coordinate upto which the laser beam should reach
 
-static float random_x;
-static float random_y;
+static float random_x;		//Random x-coordinate at which foods should be placed
+static float random_y;		//Random y-coordinate at which foods should be placed
 
-float x_tip_head;
-float x_tip_tail;
+float x_tip_head;			//Coordinate of the tip of the lizard head
+float x_tip_tail;			//Coordinate of the tip of the lizard tail
 
-static bool first_food = true;
+static bool first_food = true;	//Flag to keep track of whether the food should be drawn or already ingested
 static bool second_food = true;
 
-static float matShine[] = { 100.0 };
+static float matShine[] = { 100.0 };	//Shininess value used throughout the program
 
-static int score;
+static int score;			//Flag to keep track of the score
 char canvas_Name[] = "Alien Lizard Advance"; // Name at the top of canvas
+char game_over[] = "GAME OVER"; // Name at the top of canvas
 
 
 // Sets width and height of canvas to 600 by 60s0.
 #define canvas_Width 600
 #define canvas_Height 600
 
+//Function prototypes
 void timer_func(int val);
 void keyboard_func(unsigned char key, int x, int y);
 void calculate_random_coordinates();
 
 void init(void) {
+	/* This function sets the background color, initializes all the global variables and calculate random 
+	coordinates to place the food.*/
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 
 	z = -150.0;
-	lizard_size = 15;
+	lizard_size = 15;	//Initial lizard size is set to 15
 
 	move_lizard_x = -288.0;
-	move_lizard_y = 225.0; //300-75
+	move_lizard_y = 255; //(300-75/2-15/2). Also subtracted with 15/2 to place it in center because triangle is
+						// drawn from the bottom in the program
 
 	x_pos_human = -250.0;
 	x_pos_laser = 0;
@@ -63,8 +95,9 @@ void init(void) {
 
 	channel_count = 0;
 
-	isAnimate = 1;
+	isAnimate = 1;	// Animation is enabled at the start
 	fire_signal = 0;
+	end_game = 0;
 
 	hit_step = 0;
 	y_laser_hit = 0;
@@ -76,39 +109,42 @@ void init(void) {
 }
 
 void setup_light_source(void) {
-	// Turn on OpenGL lighting.
+	/* This function turns on OpenGL lighting and keeps light at the world origin.*/
 	
-	// Light property vectors.
+	// Set ight property vectors
 	float lightAmb[] = { 1.0, 1.0, 1.0, 1.0 };
-	//float lightDifAndSpec[] = { 1.0, 1.0, 1.0, 1.0 };
-	float lightPos[] = { 0.0, 0.0, -150.0, 1.0 }; 
+	float lightDif[] = { 1.0, 1.0, 1.0, 1.0 };
+	float lightSpec[] = { 1.0, 1.0, 1.0, 1.0 };
 
-	// Light properties.
+	// Set light position at the world origin
+	float lightPos[] = { 0.0, 0.0, 0.0, 1.0 }; 
+
+	// Properties of GL_LIGHT0
 	glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmb);
-	//glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDifAndSpec);
-	//glLightfv(GL_LIGHT0, GL_SPECULAR, lightDifAndSpec);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDif);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpec);
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0); // Enable particular light source.
-	glEnable(GL_NORMALIZE);
+	//Enable lighting and light source GL_LIGHT0
+	glEnable(GL_LIGHTING); 
+	glEnable(GL_LIGHT0);
 }
 
-void draw_head(float x, float y, float z) {
+void draw_human_head(float x, float y, float z) {
 	glPushMatrix();
 	glTranslatef(x, y, z);
 	glutSolidSphere(7, 10, 10);
 	glPopMatrix();
 }
 
-void draw_torso(float x, float  y, float z) {
+void draw_human_torso(float x, float  y, float z) {
 	glBegin(GL_LINES);
 		glVertex3f(x, y, z);
 		glVertex3f(x, y - 15, z);
 	glEnd();
 }
 
-void draw_hands(float x, float y, float z) {
+void draw_human_hands(float x, float y, float z) {
 	glBegin(GL_LINE_STRIP);
 		glVertex3f(x - 5, y - 5, z);
 		glVertex3f(x, y, z);
@@ -116,7 +152,7 @@ void draw_hands(float x, float y, float z) {
 	glEnd();
 }
 
-void draw_limbs(float x, float y, float z) {
+void draw_human_limbs(float x, float y, float z) {
 	glBegin(GL_LINE_STRIP);
 		glVertex3f(x - 5, y - 8, z);
 		glVertex3f(x, y, z);
@@ -126,17 +162,17 @@ void draw_limbs(float x, float y, float z) {
 
 void draw_human(float x, float y, float z) {
 	// Material properties of the human.
-	float matAmb[] = { 1.0, 0.0, 0.0, 1.0 };
-	float matDif[] = { 0.0, 0.0, 0.0, 1.0 };
-	float matSpec[] = { 0.0, 0.0, 0.0, 1.0 };
+	float matAmb[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	float matDif[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float matSpec[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	glMaterialfv(GL_FRONT, GL_AMBIENT, matAmb);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, matDif);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpec);
 	glMaterialfv(GL_FRONT, GL_SHININESS, matShine);
-	draw_head(x, y, z);
-	draw_torso(x, y - 7, z);
-	draw_hands(x, y - 9, z);
-	draw_limbs(x, y - 22, z);
+	draw_human_head(x, y, z);
+	draw_human_torso(x, y - 7, z);
+	draw_human_hands(x, y - 9, z);
+	draw_human_limbs(x, y - 22, z);
 }
 
 void draw_body_odd_square(float x, float y, float z) {
@@ -159,9 +195,9 @@ void draw_body_even_square(float x, float y, float z) {
 
 void draw_lizard_body(float x, float y, float z) {
 	// Material properties of the lizard body.
-	float matAmb[] = { 0.0, 0.5, 0.0, 1.0 };
-	float matDif[] = { 0.0, 0.5, 0.0, 1.0 };
-	float matSpec[] = {0.0, 0.5, 0.0, 1.0 };
+	float matAmb[] = { 0.0f, 0.5f, 0.0f, 1.0f };
+	float matDif[] = { 0.0f, 0.5f, 0.0f, 1.0f };
+	float matSpec[] = {0.0f, 0.5f, 0.0f, 1.0f };
 	glMaterialfv(GL_FRONT, GL_AMBIENT, matAmb);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, matDif);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpec);
@@ -175,9 +211,9 @@ void draw_lizard_body(float x, float y, float z) {
 
 void draw_lizard_head(float x, float y, float z) {
 	// Material properties of the lizard head.
-	float matAmb[] = { 0.6, 0.6, 0.0, 1.0 };
-	float matDif[] = { 0.6, 0.6, 0.0, 1.0 };
-	float matSpec[] = { 0.6, 0.6, 0.0, 1.0 };
+	float matAmb[] = { 0.6f, 0.6f, 0.0f, 1.0f };
+	float matDif[] = { 0.6f, 0.6f, 0.0f, 1.0f };
+	float matSpec[] = { 0.6f, 0.6f, 0.0f, 1.0f };
 	glMaterialfv(GL_FRONT, GL_AMBIENT, matAmb);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, matDif);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpec);
@@ -194,18 +230,18 @@ void draw_lizard_head(float x, float y, float z) {
 }
 
 void draw_lizard_tail(float x, float y, float z) {
-	float matAmb[] = { 0.6, 0.6, 0.0, 1.0 };
-	float matDif[] = { 0.6, 0.6, 0.0, 1.0 };
-	float matSpec[] = { 0.6, 0.6, 0.0, 1.0 };
+	float matAmb[] = { 0.6f, 0.6f, 0.0f, 1.0f };
+	float matDif[] = { 0.6f, 0.6f, 0.0f, 1.0f };
+	float matSpec[] = { 0.6f, 0.6f, 0.0f, 1.0f };
 	glMaterialfv(GL_FRONT, GL_AMBIENT, matAmb);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, matDif);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpec);
 	glMaterialfv(GL_FRONT, GL_SHININESS, matShine);
 	x_tip_tail = x + 12;
 	glBegin(GL_TRIANGLES);
-	glVertex3f(x, y, z);
-	glVertex3f(x, y  + 15 , z);
-	glVertex3f(x + 12, y + 15/2, z);
+		glVertex3f(x, y, z);
+		glVertex3f(x, y  + 15 , z);
+		glVertex3f(x + 12, y + 15/2, z);
 	glEnd();
 }
 
@@ -234,9 +270,9 @@ void draw_lizard_limbs(float x, float y, float z) {
 
 void draw_all_limbs(float x, float y, float z) {
 	// Material properties of the lizard limbs.
-	float matAmb[] = { 0.0, 0.5, 0.0, 1.0 };
-	float matDif[] = { 0.0, 0.5, 0.0, 1.0 };
-	float matSpec[] = { 0.0, 0.5, 0.0, 1.0 };
+	float matAmb[] = { 0.0f, 0.4f, 0.0f, 1.0f };
+	float matDif[] = { 0.0f, 0.4f, 0.0f, 1.0f };
+	float matSpec[] = { 0.0f, 0.4f, 0.0f, 1.0f };
 	glMaterialfv(GL_FRONT, GL_AMBIENT, matAmb);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, matDif);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpec);
@@ -264,9 +300,9 @@ void draw_laser(float x, float y, float z) {
 	// Specify that quadrics are drawn in wireframe.
 	gluQuadricDrawStyle(qobj, GLU_LINE);
 	// Material properties of the laser.
-	float matAmb[] = { 1.0, 1.0, 1.0, 1.0 };
-	float matDif[] = { 1.0, 1.0, 1.0, 1.0 };
-	float matSpec[] = { 1.0, 1.0, 1.0, 1.0 };
+	float matAmb[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float matDif[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float matSpec[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glMaterialfv(GL_FRONT, GL_AMBIENT, matAmb);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, matDif);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpec);
@@ -283,7 +319,8 @@ void handle_lizard_hit() {
 		hit_step += 1;
 		y_laser_hit = move_lizard_y;
 		if (hit_step == 1) {
-			glutTimerFunc(1000, timer_func, 3);
+			glutTimerFunc(50, timer_func, 3);
+			fire_signal = 0;
 		}
 		else if (hit_step >= 2) {
 			glutTimerFunc(1000, timer_func, 4);
@@ -295,41 +332,43 @@ void handle_lizard_hit() {
 }
 
 void draw_laser_beam() {
-	float matAmb[] = { 1.0, 0.99, 0.81, 1.0 };
-	float matDif[] = { 1.0, 0.99, 0.81, 1.0 };
-	float matSpec[] = { 1.0, 1.0, 1.0, 1.0 };
+	float matAmb[] = { 1.0f, 0.99f, 0.81f, 1.0f };
+	float matDif[] = { 1.0f, 0.99f, 0.81f, 1.0f };
+	float matSpec[] = { 1.0f, 0.99f, 0.81f, 1.0f };
 	glMaterialfv(GL_FRONT, GL_AMBIENT, matAmb);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, matDif);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpec);
 	glMaterialfv(GL_FRONT, GL_SHININESS, matShine);
 	handle_lizard_hit();
+	glLineWidth(2);
 	glBegin(GL_LINES);
-		glVertex3f(x_pos_laser-2, y_pos_laser, z);	
-		glVertex3f(x_pos_laser-2, y_laser_hit, z);
-		glVertex3f(x_pos_laser+2, y_pos_laser, z);
-		glVertex3f(x_pos_laser+2, y_laser_hit, z);
+		glVertex3f(x_pos_laser, y_pos_laser, z);	
+		glVertex3f(x_pos_laser, y_laser_hit, z);
 	glEnd();
 }
 
 void calculate_random_coordinates() {
 	int max = 10;
-	srand(time(NULL));
-	random_x = (rand() % max) * 25;
-	const int array_num[4] = {0, 75, 225};
-	int rand_index = rand() % 4;
-	random_y = array_num[rand_index];
+	srand((unsigned int)time(NULL));
+	random_x = (float)(rand() % max) * 25;
+	if (random_x == x_pos_laser or random_x == x_pos_human) {
+		random_x = random_x + 50;
+	}
+	const float array_num[3] = { 180, 105, 30 };
+	int rand_index = rand() % 3;
+	random_y = (float)array_num[rand_index];
 }
 
 void handle_lizard_ingest_clockwise_move() {
-	if (move_lizard_y == random_y and (move_lizard_x + ((lizard_size * 5) + 12) >= random_x || x_tip_tail >= random_x)) {
+	if (move_lizard_y == random_y and (move_lizard_x + ((lizard_size * 5) + 12) >= random_x or x_tip_tail >= random_x-23)) {
 		if (first_food) {
-			lizard_size += 10;
+			lizard_size += 2;
 		}
 		first_food = false;
 	}
-	if (move_lizard_y == -random_y and (move_lizard_x + ((lizard_size * 5) + 12) >= -random_x || x_tip_tail >= -random_x)) {
+	if (move_lizard_y == -random_y-15 and (move_lizard_x + ((lizard_size * 5) + 12) >= -random_x or x_tip_tail >= -random_x+23)) {
 		if (second_food) {
-			lizard_size += 10;
+			lizard_size += 2;
 		}
 		second_food = false;
 	}
@@ -337,24 +376,24 @@ void handle_lizard_ingest_clockwise_move() {
 }
 
 void handle_lizard_ingest_anticlockwise_move() {
-	if (move_lizard_y == random_y and (move_lizard_x + ((lizard_size * 5) + 12) <= random_x || x_tip_head <= random_x)) {
+	if (move_lizard_y == random_y and (move_lizard_x + ((lizard_size * 5) + 12) <= random_x or x_tip_head <= random_x-23)) {
 		if (first_food) {
-			lizard_size += 10;
+			lizard_size += 2;
 		}
 		first_food = false;
 	}
-	if (move_lizard_y == -random_y and (move_lizard_x + ((lizard_size * 5) + 12) <= -random_x || x_tip_head <= -random_x)) {
+	if (move_lizard_y == -random_y-15 and (move_lizard_x + ((lizard_size * 5) + 12) <= -random_x or x_tip_head <= -random_x+23)) {
 		if (second_food) {
-			lizard_size += 10;
+			lizard_size += 2;
 		}
 		second_food = false;
 	}
 }
 
 void display_food(float x, float y, float z) {
-	float matAmb[] = { 0.5, 0.35, 0.05, 1.0 };
-	float matDif[] = { 0.5, 0.35, 0.05, 1.0 };
-	float matSpec[] = { 1.0, 1.0, 1.0, 1.0 };
+	float matAmb[] = { 0.5f, 0.35f, 0.05f, 1.0f };
+	float matDif[] = { 0.5f, 0.35f, 0.05f, 1.0f };
+	float matSpec[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glMaterialfv(GL_FRONT, GL_AMBIENT, matAmb);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, matDif);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpec);
@@ -388,9 +427,9 @@ void writeBitmapString(void *font, char *string) {
 }
 
 void display_score(float x, float y, float z) {
-	float matAmb[] = { 1.0, 1.0, 1.0, 1.0 };
-	float matDif[] = { 1.0, 1.0, 1.0, 1.0 };
-	float matSpec[] = { 1.0, 1.0, 1.0, 1.0 };
+	float matAmb[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float matDif[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float matSpec[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glMaterialfv(GL_FRONT, GL_AMBIENT, matAmb);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, matDif);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpec);
@@ -405,6 +444,20 @@ void display_score(float x, float y, float z) {
 	glPopMatrix();
 }
 
+void display_game_over(float x, float y, float z) {
+	float matAmb[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	float matDif[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	float matSpec[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	glMaterialfv(GL_FRONT, GL_AMBIENT, matAmb);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, matDif);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpec);
+	glMaterialfv(GL_FRONT, GL_SHININESS, matShine);
+	glPushMatrix();
+	glRasterPos3f(x, y, z);
+	writeBitmapString(GLUT_BITMAP_HELVETICA_12, game_over);
+	glPopMatrix();
+}
+
 void display_func(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glLoadIdentity();
@@ -412,16 +465,20 @@ void display_func(void) {
 	draw_laser(x_pos_laser, y_pos_laser, z);
 	if (fire_signal) {
 		draw_laser_beam();
-		glutTimerFunc(80, timer_func, 2);
+		glutTimerFunc(70, timer_func, 2);
 	}
 	draw_lizard(move_lizard_x, move_lizard_y, z);
-	display_score(-20, 280, z);
+	display_score(-20, 285, z);
 	if (first_food) {
 		display_food(random_x, random_y, z);
 	}
 	if (second_food) {
-		display_food(-random_x, -random_y, z);
+		display_food(-random_x, -random_y-15, z);
 	}	
+	if (end_game) {
+		glutKeyboardFunc(NULL);
+		display_game_over(-50, 0, -150);
+	} 
 	glutSwapBuffers();
 	glFlush();
 
@@ -429,44 +486,47 @@ void display_func(void) {
 
 void move_lizard(void) {
 	if (channel_count % 2 == 0) {
-		move_lizard_x += 20;
+		move_lizard_x += 4.5;
 	}
 	else {
-		move_lizard_x -= 20;
+		move_lizard_x -= 4.5;
 	}
-	if (move_lizard_y < -279) {
-		move_lizard_y = -279;
+	if (move_lizard_y < -270) {	
+		move_lizard_y = -270;
 	}
 }
 
 void calculate_anticlockwise_start_position() {
-	move_lizard_x = 300 - (lizard_size * 5) - ((12 * 15) / 2) - 20 - 8;
+	move_lizard_x = 300 - lizard_size * 5 - 24;
 	move_lizard_y -= 75;
 	channel_count += 1;
-	lizard_size += 25;
+	lizard_size += 5;
 }
 
 void calculate_clockwise_start_position() {
-	move_lizard_x = -300 - 8;
+	move_lizard_x = -300;
 	move_lizard_y -= 75;
 	channel_count += 1;
-	lizard_size += 25;
+	lizard_size += 5;
 }
 
 void check_end_position() {
-	if (move_lizard_x <= x_pos_human && move_lizard_y <= -279) {
+	if (move_lizard_x <= x_pos_human and move_lizard_y <= -270) {
 		isAnimate = 0;
+		end_game = 1;
 		glutTimerFunc(2000, timer_func, 5);
+
 	}
 }
 
 void set_lizard_spawn_values() {
 	move_lizard_x = -288.0;
-	move_lizard_y = 225.0;
+	move_lizard_y = 255;
 	first_food = true;
 	second_food = true;
 	lizard_size = 15;
 	hit_step = 0;
+	fire_signal = 0;
 	calculate_random_coordinates();
 	if (channel_count == 0 or channel_count == 1) {
 		score += 50;
@@ -488,7 +548,7 @@ void timer_func(int val) {
 		move_lizard();
 		check_end_position();
 		if (isAnimate) {
-			glutTimerFunc(1000, timer_func, 1);
+			glutTimerFunc(50, timer_func, 1);
 		}
 		break;
 	case 2:
@@ -497,14 +557,11 @@ void timer_func(int val) {
 		break;
 	case 3:
 		lizard_size = lizard_size / 2;
-		hit_step += 1;
-		glutPostRedisplay();
-		glutKeyboardFunc(keyboard_func);
 		break;
 	case 4:
 		set_lizard_spawn_values();
-		glutPostRedisplay();
 		glutKeyboardFunc(keyboard_func);
+		glutPostRedisplay();
 		break;
 	case 5:
 		exit(0);
@@ -516,21 +573,16 @@ void keyboard_func(unsigned char key, int x, int y) {
 	switch (key)
 	{
 	case 'J': case 'j':
-		glutKeyboardFunc(NULL);
 		x_pos_laser -= 5;
 		glutPostRedisplay();
-		glutKeyboardFunc(keyboard_func);
 		break;
 	case 'K': case'k':
-		glutKeyboardFunc(NULL);
 		x_pos_laser += 5;
 		glutPostRedisplay();
-		glutKeyboardFunc(keyboard_func);
 		break;
 	case ' ':
 		glutKeyboardFunc(NULL);
 		fire_signal = 1;
-		glutPostRedisplay();
 		glutKeyboardFunc(keyboard_func);
 		break;
 }
@@ -541,9 +593,9 @@ int main(int argc, char ** argv) {
 	glutInit(&argc, argv);
 	my_setup(canvas_Width, canvas_Height, canvas_Name);
 	glutDisplayFunc(display_func);
-	init();
 	setup_light_source();
-	glutTimerFunc(1000, timer_func, 1);
+	init();
+	glutTimerFunc(50, timer_func, 1);
 	glutKeyboardFunc(keyboard_func);
 	glutMainLoop();
 	return 0;
