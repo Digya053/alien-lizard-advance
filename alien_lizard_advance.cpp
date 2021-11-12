@@ -9,7 +9,7 @@ grows 25 units in length on entering a new channel. Blaster needs two hit to des
 hit_step for determining the number of times lizard has been hit). Score increases by an extra 50 if the lizard 
 is in the top channel or the next-to-top channel.
 Apart from these, after the game ends, a "GAME_OVER" message has been added and the screen closes itself after 
-2 secs.
+2 secs. (global flag end_game has been used for this feature)
 
 Software Architecture Statement: This program utilizes three callback functions for achieving animation: 
 display_func(), the display callback handler,  timer_func(), the timer callback handler and keyboard_func(), 
@@ -19,11 +19,11 @@ to the keyboard events. The timer event is added as soon as the first frame is d
 achieving motion in lizard (uses globals move_lizard_x and move_lizard_y for lizard motion).
 
 Other major global variables: lizard_size helps in changing the lizard size on ingesting food and entering 
-new channel, animation period is the interval between each lizard movement, x_pos_human is used to determine 
-the end of game, channel_count to determine if it's a clockwise channel or not, isAnimate and fire_signal are
-the flags for animation and if laser beam is fired respectively, y_laser_hit helps in drawing laser beam only
-upto the position of lizard if it is hit by the laser, and upto the end of the screen otherwise, x_tip_head and
-x_tip_tail is used for determining end of channel and score is used for keeping track of score.
+new channel, animation period is the interval between each lizard movement, x_pos_human is used to locate 
+the position of human used for determining the end of game, channel_count to determine if it's a clockwise channel
+or not, isAnimate and fire_signal are the flags for animation and if laser beam is fired respectively, y_laser_hit
+helps in drawing laser beam only upto the position of lizard if it is hit by the laser, and upto the end of the screen
+otherwise, x_tip_head and x_tip_tail is used for determining end of channel and score is used for keeping track of score.
 ************************************************************************************************/
 
 #include "pch.h"
@@ -124,16 +124,17 @@ void setup_light_source(void) {
 
 	// Set light position at the world origin
 	float lightPos[] = { 0.0, 0.0, 0.0, 1.0 }; 
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
 	// Properties of GL_LIGHT0
 	glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmb);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDif);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpec);
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
 	//Enable lighting and light source GL_LIGHT0
 	glEnable(GL_LIGHTING); 
 	glEnable(GL_LIGHT0);
+	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // Enable local viewpoint as we want positional light
 }
 
 void draw_human_head(float x, float y, float z) {
@@ -864,12 +865,12 @@ int main(int argc, char ** argv) {
 	glutInit(&argc, argv);
 	my_setup(canvas_Width, canvas_Height, canvas_Name);
 	glutDisplayFunc(display_func);
+	glutTimerFunc(animationPeriod, timer_func, 1);
+	glutKeyboardFunc(keyboard_func);
 	// Set up light source at the world origin. Initialized at main to reduce overhead though small if initialized in the
 	// display callback handler
 	setup_light_source();
 	init();
-	glutTimerFunc(animationPeriod, timer_func, 1);
-	glutKeyboardFunc(keyboard_func);
 	glutMainLoop();
 	return 0;
 }
