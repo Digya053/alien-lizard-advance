@@ -487,7 +487,7 @@ void handle_lizard_hit(void) {
 	This function changes the lizard size to half if it has been hit once, spaws a new lizard if it has been hit twice
 	and set the y_position of the laser line to the y-position of the lizard if it has been hit.
 	*/
-	if (x_pos_laser <= move_lizard_x + lizard_size * 5 + 24 and x_pos_laser >= move_lizard_x - 12) {
+	if (x_pos_laser <= move_lizard_x + lizard_size * 5 + 16 and x_pos_laser >= move_lizard_x - 8) {
 		hit_step += 1;
 		y_laser_hit = move_lizard_y;
 		if (hit_step == 1) {
