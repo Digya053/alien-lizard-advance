@@ -14,15 +14,19 @@ Apart from these, after the game ends, a "GAME_OVER" message has been added and 
 Software Architecture Statement: This program utilizes three callback functions for achieving animation: 
 display_func(), the display callback handler,  timer_func(), the timer callback handler and keyboard_func(), 
 the glut keyboard callback handler. The display function draws all the objects and text in the scene, and
-conditionally draws laser beam, reposition the laser (using globals x_pos_laser and y_pos_laser) in response 
+conditionally draws laser beam, reposition the blaster (using globals x_pos_laser and y_pos_laser) in response 
 to the keyboard events. The timer event is added as soon as the first frame is displayed, and helps in 
 achieving motion in lizard (uses globals move_lizard_x and move_lizard_y for lizard motion).
+
+The blaster takes 4.4 secs and lizard takes 4.9 secs to move from one end of the screen to another. To reduce the
+overhead, I initialized light source in the main and drew new frames only when required (i.e, for movement of lizard
+and for the lizard spawn). Other animations were rendered from these two timed redisplay itself.
 
 Other major global variables: lizard_size helps in changing the lizard size on ingesting food and entering 
 new channel, animation period is the interval between each lizard movement, x_pos_human is used to locate 
 the position of human used for determining the end of game, channel_count to determine if it's a clockwise channel
 or not, isAnimate and fire_signal are the flags for animation and if laser beam is fired respectively, y_laser_hit
-helps in drawing laser beam only upto the position of lizard if it is hit by the laser, and upto the end of the screen
+helps in drawing laser beam only upto the position of lizard if it is hit by the blaster, and upto the end of the screen
 otherwise, x_tip_head and x_tip_tail is used for determining end of channel and score is used for keeping track of score.
 ************************************************************************************************/
 
@@ -134,7 +138,7 @@ void setup_light_source(void) {
 	//Enable lighting and light source GL_LIGHT0
 	glEnable(GL_LIGHTING); 
 	glEnable(GL_LIGHT0);
-	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // Enable local viewpoint as we want positional light
+	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // Enable local viewpoint
 }
 
 void draw_human_head(float x, float y, float z) {
@@ -446,9 +450,9 @@ void draw_lizard(float x, float y, float z) {
 }
 
 
-void draw_laser(float x, float y, float z) {
+void draw_blaster(float x, float y, float z) {
 	/*
-	This function draws the cylindrical laser using gluCylinder. Referred from Guha's book.
+	This function draws the cylindrical laser blaster using gluCylinder. Referred from Guha's book.
 	----------
 		x: float
 			The x-position where the cylinder should be placed.
@@ -684,7 +688,7 @@ void display_func(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glLoadIdentity();
 	draw_human(x_pos_human, -270.0, z);	
-	draw_laser(x_pos_laser, y_pos_laser, z);
+	draw_blaster(x_pos_laser, y_pos_laser, z);
 	if (fire_signal) {
 		draw_laser_beam();
 		glutTimerFunc(100, timer_func, 2);
@@ -696,7 +700,7 @@ void display_func(void) {
 	}
 	if (second_food) {
 		display_food(-random_x, -random_y-15, z);
-	}	
+	}
 	if (end_game) {
 		glutKeyboardFunc(NULL);
 		display_game_over(-50, 0, -150);
@@ -841,14 +845,12 @@ void keyboard_func(unsigned char key, int x, int y) {
 	switch (key)
 	{
 	case 'J': case 'j':
-		// Enable left movement of laser
+		// Enable left movement of blaster
 		x_pos_laser -= 5;
-		glutPostRedisplay();
 		break;
 	case 'K': case'k':
-		// Enable right movement of laser
+		// Enable right movement of blaster
 		x_pos_laser += 5;
-		glutPostRedisplay();
 		break;
 	case ' ':
 		// Set fire signal to 1 to display laser beam at the next frame display
