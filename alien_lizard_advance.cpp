@@ -18,9 +18,8 @@ conditionally draws laser beam, reposition the blaster (using globals x_pos_lase
 to the keyboard events. The timer event is added as soon as the first frame is displayed, and helps in 
 achieving motion in lizard (uses globals move_lizard_x and move_lizard_y for lizard motion).
 
-The blaster takes 4.4 secs and lizard takes 4.9 secs to move from one end of the screen to another. To reduce the
-overhead, I initialized light source in the main and drew new frames only when required (i.e, for movement of lizard
-and for the lizard spawn). Other animations were rendered from these two timed redisplay itself.
+To enable the blaster take 3.5 ms and lizard take 4 ms to move from one end of the screen to another, I moved
+the blaster by 5.8 units and lizard by 5.1 units on each new frame redisplay (each 50 ms).
 
 Other major global variables: lizard_size helps in changing the lizard size on ingesting food and entering 
 new channel, animation period is the interval between each lizard movement, x_pos_human is used to locate 
@@ -716,10 +715,10 @@ void move_lizard(void) {
 	movement by -4.5. And set the y-position of lizard to -270 if it went below -270 (out of the canvas).
 	*/
 	if (channel_count % 2 == 0) {
-		move_lizard_x += 4.5;
+		move_lizard_x += 5.1f;
 	}
 	else {
-		move_lizard_x -= 4.5;
+		move_lizard_x -= 5.1f;
 	}
 	if (move_lizard_y < -270) {	
 		move_lizard_y = -270;
@@ -846,11 +845,11 @@ void keyboard_func(unsigned char key, int x, int y) {
 	{
 	case 'J': case 'j':
 		// Enable left movement of blaster
-		x_pos_laser -= 5;
+		x_pos_laser -= 5.8f;
 		break;
 	case 'K': case'k':
 		// Enable right movement of blaster
-		x_pos_laser += 5;
+		x_pos_laser += 5.8f;
 		break;
 	case ' ':
 		// Set fire signal to 1 to display laser beam at the next frame display
