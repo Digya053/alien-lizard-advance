@@ -19,8 +19,7 @@ void my_3d_projection(int width, int height)
 	glViewport(0, 0, width, height);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	//glOrtho(-(width_bound / 2), (width_bound / 2), -(height_bound / 2), (height_bound / 2), 0, -200);
-	glOrtho(-300, 300, -300, 300, 0, 200);
+	glOrtho(-(width_bound / 2), (width_bound / 2), -(height_bound / 2), (height_bound / 2), 0, 200);
 	glMatrixMode(GL_MODELVIEW);
 }
 
