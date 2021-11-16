@@ -18,8 +18,10 @@ conditionally draws laser beam, reposition the blaster (using globals x_pos_lase
 to the keyboard events. The timer event is added as soon as the first frame is displayed, and helps in
 achieving motion in lizard (uses globals move_lizard_x and move_lizard_y for lizard motion).
 
-To enable the blaster take 3.5 ms and lizard take 4 ms to move from one end of the screen to another, I moved
-the blaster by 5.8 units and lizard by 5.1 units on each new frame redisplay (each 50 ms).
+The blaster took 4.4 ms when moved at the rate of 5 pixel increments each 50 ms. To enable the blaster take 3.5 ms
+and lizard take 4 ms to move from one end of the screen to another, I moved the blaster by 5.8 units and lizard by
+5.1 units on each new frame redisplay. For measurement of time, blaster was placed in the leftmost position
+of canvas and moved upto the rightmost position and the stop watch was used to measure the time in between.
 
 Other major global variables: lizard_size helps in changing the lizard size on ingesting food and entering
 new channel, animation period is the interval between each lizard movement, x_pos_human is used to locate
