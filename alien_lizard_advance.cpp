@@ -4,25 +4,25 @@ alien_lizard_advance.cpp
 EXTRA_CREDIT: All four extra credit features have been implemented, i.e, placing two food pieces randomly
 in the channel, determining their number and position at random for each spawned lizard (uses globals random_x
 and random_y for positioning food at random places), growing lizard by 10 units in length each time it ingests a
-food piece (globals food_x, food_y are used for making foods disapear after lizard reaches it). The lizard 
-grows 25 units in length on entering a new channel. Blaster needs two hit to destroy the lizard (uses global 
-hit_step for determining the number of times lizard has been hit). Score increases by an extra 50 if the lizard 
+food piece (globals food_x, food_y are used for making foods disapear after lizard reaches it). The lizard
+grows 25 units in length on entering a new channel. Blaster needs two hit to destroy the lizard (uses global
+hit_step for determining the number of times lizard has been hit). Score increases by an extra 50 if the lizard
 is in the top channel or the next-to-top channel.
-Apart from these, after the game ends, a "GAME_OVER" message has been added and the screen closes itself after 
+Apart from these, after the game ends, a "GAME_OVER" message has been added and the screen closes itself after
 2 secs. (global flag end_game has been used for this feature)
 
-Software Architecture Statement: This program utilizes three callback functions for achieving animation: 
-display_func(), the display callback handler,  timer_func(), the timer callback handler and keyboard_func(), 
+Software Architecture Statement: This program utilizes three callback functions for achieving animation:
+display_func(), the display callback handler,  timer_func(), the timer callback handler and keyboard_func(),
 the glut keyboard callback handler. The display function draws all the objects and text in the scene, and
-conditionally draws laser beam, reposition the blaster (using globals x_pos_laser and y_pos_laser) in response 
-to the keyboard events. The timer event is added as soon as the first frame is displayed, and helps in 
+conditionally draws laser beam, reposition the blaster (using globals x_pos_laser and y_pos_laser) in response
+to the keyboard events. The timer event is added as soon as the first frame is displayed, and helps in
 achieving motion in lizard (uses globals move_lizard_x and move_lizard_y for lizard motion).
 
 To enable the blaster take 3.5 ms and lizard take 4 ms to move from one end of the screen to another, I moved
 the blaster by 5.8 units and lizard by 5.1 units on each new frame redisplay (each 50 ms).
 
-Other major global variables: lizard_size helps in changing the lizard size on ingesting food and entering 
-new channel, animation period is the interval between each lizard movement, x_pos_human is used to locate 
+Other major global variables: lizard_size helps in changing the lizard size on ingesting food and entering
+new channel, animation period is the interval between each lizard movement, x_pos_human is used to locate
 the position of human used for determining the end of game, channel_count to determine if it's a clockwise channel
 or not, isAnimate and fire_signal are the flags for animation and if laser beam is fired respectively, y_laser_hit
 helps in drawing laser beam only upto the position of lizard if it is hit by the blaster, and upto the end of the screen
@@ -72,7 +72,7 @@ static float matShine[] = { 100.0 };	//Shininess value used throughout the progr
 
 static int score;			//Flag to keep track of the score
 char canvas_Name[] = "Alien Lizard Advance"; // Name at the top of canvas
-char game_over[] = "GAME OVER"; // Name at the top of canvas
+char game_over[] = "GAME OVER"; // Display after game is over
 
 
 // Sets width and height of canvas to 600 by 600.
@@ -85,7 +85,7 @@ void keyboard_func(unsigned char key, int x, int y);
 void calculate_random_coordinates();
 
 void init(void) {
-	/* This function sets the background color, initializes all the global variables and calculate random 
+	/* This function sets the background color, initializes all the global variables and calculate random
 	coordinates to place the food.*/
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 
@@ -94,7 +94,7 @@ void init(void) {
 
 	move_lizard_x = -288.0;
 	move_lizard_y = 255; //(300-75/2-15/2). Also subtracted with 15/2 to place it in center because triangle is
-						// drawn from the bottom in the program
+						// drawn from the bottom 
 
 	x_pos_human = -250.0;
 	x_pos_laser = 0;
@@ -114,19 +114,19 @@ void init(void) {
 	score = 0;
 	random_x = 0;
 	random_y = 0;
-	calculate_random_coordinates();	
+	calculate_random_coordinates();
 }
 
 void setup_light_source(void) {
 	/* This function turns on OpenGL lighting and keeps light at the world origin.*/
-	
+
 	// Set light property vectors
 	float lightAmb[] = { 1.0, 1.0, 1.0, 1.0 };
 	float lightDif[] = { 1.0, 1.0, 1.0, 1.0 };
 	float lightSpec[] = { 1.0, 1.0, 1.0, 1.0 };
 
 	// Set light position at the world origin
-	float lightPos[] = { 0.0, 0.0, 0.0, 1.0 }; 
+	float lightPos[] = { 0.0, 0.0, 0.0, 1.0 };
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
 	// Properties of GL_LIGHT0
@@ -135,7 +135,7 @@ void setup_light_source(void) {
 	glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpec);
 
 	//Enable lighting and light source GL_LIGHT0
-	glEnable(GL_LIGHTING); 
+	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // Enable local viewpoint
 }
@@ -171,8 +171,8 @@ void draw_human_torso(float x, float  y, float z) {
 			The z-plane where line should be drawn
 	*/
 	glBegin(GL_LINES);
-		glVertex3f(x, y, z);
-		glVertex3f(x, y - 15, z);
+	glVertex3f(x, y, z);
+	glVertex3f(x, y - 15, z);
 	glEnd();
 }
 
@@ -189,9 +189,9 @@ void draw_human_hands(float x, float y, float z) {
 			The z-plane where line strip for hands should be drawn
 	*/
 	glBegin(GL_LINE_STRIP);
-		glVertex3f(x - 5, y - 5, z);
-		glVertex3f(x, y, z);
-		glVertex3f(x + 5, y - 5, z);
+	glVertex3f(x - 5, y - 5, z);
+	glVertex3f(x, y, z);
+	glVertex3f(x + 5, y - 5, z);
 	glEnd();
 }
 
@@ -208,9 +208,9 @@ void draw_human_limbs(float x, float y, float z) {
 			The z-plane where line strip for limbs should be drawn
 	*/
 	glBegin(GL_LINE_STRIP);
-		glVertex3f(x - 5, y - 8, z);
-		glVertex3f(x, y, z);
-		glVertex3f(x + 5, y - 8, z);
+	glVertex3f(x - 5, y - 8, z);
+	glVertex3f(x, y, z);
+	glVertex3f(x + 5, y - 8, z);
 	glEnd();
 }
 
@@ -253,10 +253,10 @@ void draw_body_odd_square(float x, float y, float z) {
 			The z-position of the left bottom part of odd squares.
 	*/
 	glBegin(GL_TRIANGLE_STRIP);
-		glVertex3f(x + lizard_size, y, z);
-		glVertex3f(x, y, z);
-		glVertex3f(x + lizard_size, y + 15, z);
-		glVertex3f(x, y + 15, z);
+	glVertex3f(x + lizard_size, y, z);
+	glVertex3f(x, y, z);
+	glVertex3f(x + lizard_size, y + 15, z);
+	glVertex3f(x, y + 15, z);
 	glEnd();
 }
 
@@ -273,10 +273,10 @@ void draw_body_even_square(float x, float y, float z) {
 			The z-position of the left bottom part of even squares.
 	*/
 	glBegin(GL_TRIANGLE_STRIP);
-		glVertex3f(x, y, z);
-		glVertex3f(x, y + 15, z);
-		glVertex3f(x + lizard_size, y, z);
-		glVertex3f(x + lizard_size, y + 15, z);
+	glVertex3f(x, y, z);
+	glVertex3f(x, y + 15, z);
+	glVertex3f(x + lizard_size, y, z);
+	glVertex3f(x + lizard_size, y + 15, z);
 	glEnd();
 }
 
@@ -297,7 +297,7 @@ void draw_lizard_body(float x, float y, float z) {
 	// Material properties of the lizard body.
 	float matAmb[] = { 0.0f, 0.5f, 0.0f, 1.0f };
 	float matDif[] = { 0.0f, 0.5f, 0.0f, 1.0f };
-	float matSpec[] = {0.0f, 0.5f, 0.0f, 1.0f };
+	float matSpec[] = { 0.0f, 0.5f, 0.0f, 1.0f };
 	glMaterialfv(GL_FRONT, GL_AMBIENT, matAmb);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, matDif);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpec);
@@ -336,7 +336,7 @@ void draw_lizard_head(float x, float y, float z) {
 	glBegin(GL_TRIANGLES);
 	glVertex3f(x, y, z);
 	glVertex3f(x, y + 15, z);
-	glVertex3f(x - 12, y + 15/2, z);
+	glVertex3f(x - 12, y + 15 / 2, z);
 	glEnd();
 }
 
@@ -362,9 +362,9 @@ void draw_lizard_tail(float x, float y, float z) {
 	glMaterialfv(GL_FRONT, GL_SHININESS, matShine);
 	x_tip_tail = x + 12;
 	glBegin(GL_TRIANGLES);
-		glVertex3f(x, y, z);
-		glVertex3f(x, y  + 15 , z);
-		glVertex3f(x + 12, y + 15/2, z);
+	glVertex3f(x, y, z);
+	glVertex3f(x, y + 15, z);
+	glVertex3f(x + 12, y + 15 / 2, z);
 	glEnd();
 }
 
@@ -372,7 +372,7 @@ void draw_lizard_tail(float x, float y, float z) {
 void draw_lizard_limbs(float x, float y, float z) {
 	/*
 	This function draws the lizard limbs using GL_LINES, rotate the line as as to make the two lines
-	placed at an angle of 45 degree. 
+	placed at an angle of 45 degree.
 	Parameters:
 	----------
 		x: float
@@ -389,8 +389,8 @@ void draw_lizard_limbs(float x, float y, float z) {
 	// Translate back to original position
 	glTranslatef(-x, -y, -z);
 	glBegin(GL_LINES);
-		glVertex3f(x, y, z);
-		glVertex3f(x, y - 6, z);
+	glVertex3f(x, y, z);
+	glVertex3f(x, y - 6, z);
 	glEnd();
 	glPopMatrix();
 
@@ -399,8 +399,8 @@ void draw_lizard_limbs(float x, float y, float z) {
 	glRotatef(45, 0, 0, 1);
 	glTranslatef(-x, -y, -z);
 	glBegin(GL_LINES);
-		glVertex3f(x, y, z);
-		glVertex3f(x, y - 6, z);
+	glVertex3f(x, y, z);
+	glVertex3f(x, y - 6, z);
 	glEnd();
 	glPopMatrix();
 }
@@ -424,9 +424,9 @@ void draw_all_limbs(float x, float y, float z) {
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, matDif);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpec);
 	glMaterialfv(GL_FRONT, GL_SHININESS, matShine);
-	draw_lizard_limbs(x + lizard_size/2, y, z);
-	draw_lizard_limbs(x + (5*lizard_size) - (lizard_size/2), y, z);
-	
+	draw_lizard_limbs(x + lizard_size / 2, y, z);
+	draw_lizard_limbs(x + (5 * lizard_size) - (lizard_size / 2), y, z);
+
 }
 
 void draw_lizard(float x, float y, float z) {
@@ -434,7 +434,7 @@ void draw_lizard(float x, float y, float z) {
 	This function draws all the parts of the lizard and places them at correct position.
 	----------
 		x: float
-			The x-position where the left bottom of the first triangular square should be placed. 
+			The x-position where the left bottom of the first triangular square should be placed.
 		y: float
 			The y-position where the left bottom of the first triangular square should be placed.
 		z: float
@@ -461,7 +461,7 @@ void draw_blaster(float x, float y, float z) {
 			The z-position where the cylinder should be placed.
 	*/
 	// Create a pointer to a quadric object.
-	GLUquadricObj *qobj; 
+	GLUquadricObj *qobj;
 	// Initialize new quadric object
 	qobj = gluNewQuadric();
 	// Draw the quadrics in wireframe
@@ -506,7 +506,7 @@ void handle_lizard_hit(void) {
 
 void draw_laser_beam(void) {
 	/*
-	This function draws a laser beam of using GL_LINES of width 2. If the lizard is not hit it draws upto the end of the 
+	This function draws a laser beam of using GL_LINES of width 2. If the lizard is not hit it draws upto the end of the
 	canvas and if it's hit, it draws the beam only upto lizard's y-position.
 	*/
 	float matAmb[] = { 1.0f, 0.99f, 0.81f, 1.0f };
@@ -519,14 +519,14 @@ void draw_laser_beam(void) {
 	handle_lizard_hit();
 	glLineWidth(2);
 	glBegin(GL_LINES);
-		glVertex3f(x_pos_laser, y_pos_laser, z);	
-		glVertex3f(x_pos_laser, y_laser_hit, z);
+	glVertex3f(x_pos_laser, y_pos_laser, z);
+	glVertex3f(x_pos_laser, y_laser_hit, z);
 	glEnd();
 }
 
 void calculate_random_coordinates(void) {
 	/*
-	This function draws food at random places. Only the y-values 180, 105 and 30 are taken randomly as as not to overpaint score, human and laser. 
+	This function draws food at random places. Only the y-values 180, 105 and 30 are taken randomly as as not to overpaint score, human and laser.
 	For x-value, any random number divisible by 25 is taken.
 	*/
 	int max = 10;
@@ -545,13 +545,13 @@ void handle_lizard_ingest_clockwise_move(void) {
 	This function determines if the lizard is passing over the food in the clockwise direction, set the food flags
 	to false if the lizard has passed it and increases lizard's size.
 	*/
-	if (move_lizard_y == random_y and (move_lizard_x + ((lizard_size * 5) + 12) >= random_x or x_tip_tail >= random_x-23)) {
+	if (move_lizard_y == random_y and (move_lizard_x + ((lizard_size * 5) + 12) >= random_x or x_tip_tail >= random_x - 23)) {
 		if (first_food) {
 			lizard_size += 2;
 		}
 		first_food = false;
 	}
-	if (move_lizard_y == -random_y-15 and (move_lizard_x + ((lizard_size * 5) + 12) >= -random_x or x_tip_tail >= -random_x+23)) {
+	if (move_lizard_y == -random_y - 15 and (move_lizard_x + ((lizard_size * 5) + 12) >= -random_x or x_tip_tail >= -random_x + 23)) {
 		if (second_food) {
 			lizard_size += 2;
 		}
@@ -565,13 +565,13 @@ void handle_lizard_ingest_anticlockwise_move(void) {
 	This function determines if the lizard is passing over the food in the anti-clockwise direction, set the food flags
 	to false if the lizard has passed it and increases lizard's size.
 	*/
-	if (move_lizard_y == random_y and (move_lizard_x + ((lizard_size * 5) + 12) <= random_x or x_tip_head <= random_x-23)) {
+	if (move_lizard_y == random_y and (move_lizard_x + ((lizard_size * 5) + 12) <= random_x or x_tip_head <= random_x - 23)) {
 		if (first_food) {
 			lizard_size += 2;
 		}
 		first_food = false;
 	}
-	if (move_lizard_y == -random_y-15 and (move_lizard_x + ((lizard_size * 5) + 12) <= -random_x or x_tip_head <= -random_x+23)) {
+	if (move_lizard_y == -random_y - 15 and (move_lizard_x + ((lizard_size * 5) + 12) <= -random_x or x_tip_head <= -random_x + 23)) {
 		if (second_food) {
 			lizard_size += 2;
 		}
@@ -607,7 +607,7 @@ void display_food(float x, float y, float z) {
 	}
 	else {
 		handle_lizard_ingest_anticlockwise_move();
-	}	
+	}
 }
 
 void writeBitmapString(void *font, char *string) {
@@ -681,12 +681,12 @@ void display_game_over(float x, float y, float z) {
 void display_func(void) {
 	/*
 	This is a glut display callback handler which is called whenever a window needs to be displayed or redisplayed. It clears the
-	canvas screen and reloads all the objects of the scene when called. This function also clears the food when lizard passes over 
+	canvas screen and reloads all the objects of the scene when called. This function also clears the food when lizard passes over
 	them, displays the text score and the text game over at the end of the game.
 	*/
 	glClear(GL_COLOR_BUFFER_BIT);
 	glLoadIdentity();
-	draw_human(x_pos_human, -270.0, z);	
+	draw_human(x_pos_human, -270.0, z);
 	draw_blaster(x_pos_laser, y_pos_laser, z);
 	if (fire_signal) {
 		draw_laser_beam();
@@ -698,12 +698,12 @@ void display_func(void) {
 		display_food(random_x, random_y, z);
 	}
 	if (second_food) {
-		display_food(-random_x, -random_y-15, z);
+		display_food(-random_x, -random_y - 15, z);
 	}
 	if (end_game) {
 		glutKeyboardFunc(NULL);
 		display_game_over(-50, 0, -150);
-	} 
+	}
 	glutSwapBuffers();
 	glFlush();
 
@@ -720,7 +720,7 @@ void move_lizard(void) {
 	else {
 		move_lizard_x -= 5.1f;
 	}
-	if (move_lizard_y < -270) {	
+	if (move_lizard_y < -270) {
 		move_lizard_y = -270;
 	}
 }
@@ -771,7 +771,7 @@ void set_lizard_spawn_values(void) {
 		else {
 			score += 50;
 		}
-		
+
 	}
 	move_lizard_x = -288.0;
 	move_lizard_y = 255;
@@ -782,13 +782,13 @@ void set_lizard_spawn_values(void) {
 	fire_signal = 0;
 	channel_count = 0;
 	calculate_random_coordinates();
-	
+
 }
 
 void timer_func(int val) {
 	/*
 	This function is a glut timer callback function which displays 20 new frames in 1 second to enable lizard movement in both anticlockwise and clockwise direction,
-	sets the fire_signal to 0 to disable laser beam display after 100 ms, decreases the lizard size by a factor of 2 if it has been hit once, spawns the lizard 
+	sets the fire_signal to 0 to disable laser beam display after 100 ms, decreases the lizard size by a factor of 2 if it has been hit once, spawns the lizard
 	after 1000ms and exit after 2000ms at the end of game.
 	Parameters:
 	-----------
@@ -857,7 +857,7 @@ void keyboard_func(unsigned char key, int x, int y) {
 		fire_signal = 1;
 		glutKeyboardFunc(keyboard_func);
 		break;
-}
+	}
 }
 
 /************** MAIN FUNCTION **************/
